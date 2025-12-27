@@ -679,14 +679,14 @@
             let imageFallback = "";
 
             if (className === 'warrior') {
-                videoFile = currentGender === 'male' ? 'guerrero.mp4' : 'guerrera.mp4';
+                videoFile = currentGender === 'male' ? 'videos/guerrero.mp4' : 'videos/guerrera.mp4';
                 imageFallback = 'imagenes/guerrero_bg_placeholder.jpg';
             } else if (className === 'assassin') {
-                videoFile = currentGender === 'male' ? 'asesino.mp4' : 'asesina.mp4';
+                videoFile = currentGender === 'male' ? 'videos/asesino.mp4' : 'videos/asesina.mp4';
             } else if (className === 'mage') {
-                videoFile = currentGender === 'male' ? 'mago.mp4' : 'maga.mp4';
+                videoFile = currentGender === 'male' ? 'videos/mago.mp4' : 'videos/maga.mp4';
             } else if (className === 'saint') {
-                videoFile = currentGender === 'male' ? 'santo.mp4' : 'santa.mp4';
+                videoFile = currentGender === 'male' ? 'videos/santo.mp4' : 'videos/santa.mp4';
             }
 
             bgVideoSource.src = videoFile;
