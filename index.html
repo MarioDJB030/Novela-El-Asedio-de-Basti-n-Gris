@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Asedio de Bastión Gris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #0a0a0a;
+            --color-text: #e0e0e0;
+            --color-accent: #c0a050;
+            /* Gold */
+            --color-accent-hover: #e0c070;
+            --color-panel: rgba(0, 0, 0, 0.85);
+            --color-choice-bg: rgba(30, 30, 30, 0.9);
+            --color-choice-hover: rgba(50, 50, 50, 1);
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Playfair Display', serif;
+            --transition-speed: 0.5s;
+        }
+
+        /* Reset & Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            font-family: var(--font-body);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Video Background */
+        #bg-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: #111;
+            /* Fallback */
+            overflow: hidden;
+        }
+
+        #bg-video-container video,
+        #bg-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 1s ease;
+            opacity: 0.5;
+        }
+
+        #bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            /* Behind video if visible, or main bg */
+        }
+
+        /* Main Container */
+        #app {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* UI Layers */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity var(--transition-speed) ease;
+            opacity: 0;
+            pointer-events: none;
+            /* Disable interaction when hidden */
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* --- Menu Screen --- */
+        .title-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 1);
+        }
+
+        h1 {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        /* Gender Selection */
+        .gender-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--color-panel);
+            padding: 0.5rem;
+            border-radius: 50px;
+            border: 1px solid var(--color-accent);
+        }
+
+        .gender-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 0.5rem 1.5rem;
+            font-family: var(--font-title);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 40px;
+        }
+
+        .gender-btn.selected {
+            background: var(--color-accent);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Class Selection */
+        .classes-container {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .class-card {
+            width: 200px;
+            height: 300px;
+            background: var(--color-panel);
+            border: 1px solid #444;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .class-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--color-accent);
+            box-shadow: 0 10px 30px rgba(192, 160, 80, 0.2);
+        }
+
+        .class-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--color-text);
+        }
+
+        .class-name {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            color: var(--color-accent);
+        }
+
+        .class-desc {
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 0 1rem;
+            margin-top: 0.5rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        /* --- Game Screen --- */
+        .story-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            /* Lowest in game screen */
+            transition: opacity 0.5s ease;
+        }
+
+        /* Character Overlay */
+        #character-overlay {
+            position: absolute;
+            bottom: 35%;
+            /* Lift character above text box */
+            right: 10%;
+            height: 60vh;
+            /* Reducing height slightly to fit in screen without being too huge */
+            max-width: 40%;
+            object-fit: contain;
+            z-index: 25;
+            filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        /* Scene Container */
+        .scene-container {
+            position: absolute;
+            bottom: 5%;
+            width: 90%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 20;
+        }
+
+        /* Text Box */
+        .dialogue-box {
+            background: var(--color-panel);
+            border: 2px solid var(--color-accent);
+            padding: 2rem;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .dialogue-box::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            border: 1px solid rgba(192, 160, 80, 0.3);
+            pointer-events: none;
+        }
+
+        .dialogue-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            min-height: 3.8em;
+            /* Reserve space for text */
+        }
+
+        /* Choices */
+        .choices-container {
+            display: flex;
+            flex-direction: row;
+            /* Horizontal layout */
+            gap: 1rem;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* Hide UI Button */
+        #hide-ui-btn {
+            position: absolute;
+            top: -3rem;
+            left: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--color-accent);
+            color: var(--color-text);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        #hide-ui-btn:hover {
+            background: var(--color-accent);
+            color: #000;
+        }
+
+        .ui-hidden .dialogue-box,
+        .ui-hidden .choices-container,
+        .ui-hidden .continue-btn {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .choice-btn,
+        .continue-btn {
+            background: var(--color-choice-bg);
+            border: 1px solid #555;
+            color: var(--color-text);
+            padding: 1rem 2rem;
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            text-align: center;
+            /* Center text for buttons */
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            flex: 1;
+            /* Equal width */
+        }
+
+        .choice-btn:hover {
+            background: var(--color-choice-hover);
+            border-left: 0;
+            /* Reset */
+            border-bottom: 4px solid var(--color-accent);
+            padding-left: 1rem;
+            /* Reset */
+            transform: translateY(-2px);
+        }
+
+        .continue-btn {
+            background: var(--color-accent);
+            color: #000;
+            text-align: center;
+            font-weight: bold;
+            align-self: flex-end;
+            width: fit-content;
+            margin-top: 1rem;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .continue-btn:hover {
+            background: var(--color-accent-hover);
+            transform: scale(1.05);
+        }
+
+        /* End Screen Extras */
+        .end-btn-container {
+            margin-top: 2rem;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background Layer -->
+    <div id="bg-video-container">
+        <!-- Video element created dynamically or sources swapped -->
+        <video id="bg-video" autoplay muted loop playsinline>
+            <source src="" type="video/mp4">
+        </video>
+    </div>
+
+    <div id="app">
+
+        <!-- MENU SCREEN -->
+        <div id="menu-screen" class="screen active">
+            <div class="title-container">
+                <h1>El Asedio de Bastión Gris</h1>
+                <div class="subtitle">Una Novela Visual de 4 Perspectivas</div>
+            </div>
+
+            <div class="gender-selector">
+                <button class="gender-btn selected" data-gender="male" onclick="setGender('male')">Hombre</button>
+                <button class="gender-btn" data-gender="female" onclick="setGender('female')">Mujer</button>
+            </div>
+
+            <div class="classes-container">
+                <!-- Warrior -->
+                <div class="class-card" onmouseenter="previewClass('warrior')" onclick="startGame('warrior')">
+                    <div class="class-icon">⚔️</div>
+                    <div class="class-name">Guerrero</div>
+                    <div class="class-desc">Fuerza bruta y liderazgo en el frente.</div>
+                </div>
+                <!-- Assassin -->
+                <div class="class-card" onmouseenter="previewClass('assassin')" onclick="startGame('assassin')">
+                    <div class="class-icon">🗡️</div>
+                    <div class="class-name">Asesino</div>
+                    <div class="class-desc">Sombras, sigilo y objetivos clave.</div>
+                </div>
+                <!-- Mage -->
+                <div class="class-card" onmouseenter="previewClass('mage')" onclick="startGame('mage')">
+                    <div class="class-icon">🔮</div>
+                    <div class="class-name">Mago</div>
+                    <div class="class-desc">Poder arcano y destrucción masiva.</div>
+                </div>
+                <!-- Saint -->
+                <div class="class-card" onmouseenter="previewClass('saint')" onclick="startGame('saint')">
+                    <div class="class-icon">✨</div>
+                    <div class="class-name">Santo</div>
+                    <div class="class-desc">Curación, fe y milagros.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="game-screen" class="screen">
+            <!-- Story Background -->
+            <img id="story-background" src="" alt="Story Scene" class="story-bg">
+
+            <!-- NPC/Character Overlay -->
+            <img id="character-overlay" src="" alt="Character" class="hidden">
+
+            <div class="scene-container" id="ui-container">
+                <button id="hide-ui-btn" onclick="toggleUI()" title="Ocultar Interfaz">👁️</button>
+                <div class="dialogue-box">
+                    <p id="narrative-text" class="dialogue-text">...</p>
+                </div>
+                <div id="choices-area" class="choices-container">
+                    <!-- Buttons injected here -->
+                </div>
+                <button id="continue-btn" class="continue-btn" onclick="nextScene()">Continuar ➝</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA ---
+        const stories = {
+            warrior: [
+                {
+                    img: "imagenes/guerrero_1_puerta.png",
+                    text: "La puerta de Bastión Gris se alza ante ti. El ariete golpea la madera. ¡BUM! Las flechas llueven.",
+                    choices: [
+                        { label: "Cubrirse con el escudo y empujar", outcome: "Tu escudo vibra con los impactos, pero proteges a tus hombres mientras avanzan." },
+                        { label: "Gritar para inspirar a las tropas", outcome: "Tu rugido supera el estruendo de la batalla. Los soldados cargan con furia renovada." }
+                    ]
+                },
+                {
+                    img: "imagenes/guerrero_2_patio.png",
+                    text: "¡La puerta cede! Entras al patio interior. Un capitán enemigo te corta el paso.",
+                    character: "imagenes/npc_capitan.png",
+                    choices: [
+                        { label: "Golpe de escudo a la cara", outcome: "El capitán cae aturdido. Lo rematas sin piedad." },
+                        { label: "Duelo de espadas honorable", outcome: "Chocan aceros. Eres más fuerte y rompes su guardia de un tajo." }
+                    ]
+                },
+                {
+                    img: "imagenes/guerrero_3_muralla.png",
+                    text: "Luchas en las murallas. De repente, una luz azul cegadora estalla en la colina lejana. La torre de vigilancia explota.",
+                    choices: [
+                        { label: "Aprovechar la confusión", outcome: "Mientras miran la explosión, atraviesas sus defensas distraídas." },
+                        { label: "Protegerse de los escombros", outcome: "Te cubres justo a tiempo mientras llueven piedras de la torre destruida." }
+                    ]
+                },
+                {
+                    img: "imagenes/guerrero_4_torre.png",
+                    text: "Subes hacia la sala del trono. La guardia real bloquea la escalera de caracol.",
+                    choices: [
+                        { label: "Usar tu fuerza bruta", outcome: "Los empujas escalera abajo como si fueran muñecos." },
+                        { label: "Intimidarlos", outcome: "Ven la sangre en tu armadura y se apartan temblando." }
+                    ]
+                },
+                {
+                    img: "imagenes/guerrero_5_trono.png",
+                    text: "El Rey está acorralado. La batalla ha terminado. Eres el primero en llegar.",
+                    character: "imagenes/npc_rey.png",
+                    choices: [
+                        { label: "Exigir su rendición", outcome: "El Rey suelta su espada. La victoria es nuestra." },
+                        { label: "Acabar con él", outcome: "La guerra termina con su vida. Tu nombre será leyenda." }
+                    ]
+                }
+            ],
+            assassin: [
+                {
+                    img: "imagenes/asesino_1_alcantarilla.png",
+                    text: "Mientras el ejército ataca la puerta, tú te deslizas por las alcantarillas. El olor es insoportable.",
+                    choices: [
+                        { label: "Avanzar rápido ignorando el ruido", outcome: "Haces ruido al pisar agua, pero eres rápido. Nadie te ve." },
+                        { label: "Moverse lento y silencioso", outcome: "Tardas más, pero te deslizas como una sombra líquida." }
+                    ]
+                },
+                {
+                    img: "imagenes/asesino_2_sombras.png",
+                    text: "Emerges en los pasillos del castillo. Dos guardias patrullan hablando de la batalla exterior.",
+                    choices: [
+                        { label: "Lanzar una moneda para distraer", outcome: "Se giran hacia el sonido. Pasas por detrás sin ser visto." },
+                        { label: "Eliminarlos silenciosamente", outcome: "Dos cortes rápidos. Caen antes de tocar el suelo." }
+                    ]
+                },
+                {
+                    img: "imagenes/asesino_3_tejados.png",
+                    text: "Estás en los tejados. ¡BOOM! Una explosión mágica azul ilumina el cielo. Todos los guardias miran hacia afuera.",
+                    choices: [
+                        { label: "Es mi oportunidad, ¡correr!", outcome: "Corres por las tejas mientras ellos miran la luz del Mago." },
+                        { label: "Observar un segundo", outcome: "Esa magia... debe ser nuestro hechicero. El caos es tu aliado." }
+                    ]
+                },
+                {
+                    img: "imagenes/asesino_4_ventana.png",
+                    text: "Llegas a la ventana de los aposentos reales. Está cerrada.",
+                    choices: [
+                        { label: "Forzar la cerradura", outcome: "Click. Se abre suavemente." },
+                        { label: "Romper el cristal con tela", outcome: "Amortiguas el sonido. Entras rodando." }
+                    ]
+                },
+                {
+                    img: "imagenes/asesino_5_recamara.png",
+                    text: "El Rey está solo, mirando un mapa, ajeno a tu presencia.",
+                    character: "imagenes/npc_rey.png",
+                    choices: [
+                        { label: "Susurrar antes de atacar", outcome: "Se gira aterrorizado justo cuando tu hoja encuentra su cuello." },
+                        { label: "Veneno en su copa", outcome: "Lo viertes en su vino. Cae asfixiado segundos después." }
+                    ]
+                }
+            ],
+            mage: [
+                {
+                    img: "imagenes/mago_1_colina.png",
+                    text: "Estás en la colina frente al castillo. El viento aúlla. Debes preparar el hechizo de asedio.",
+                    choices: [
+                        { label: "Comenzar el cántico lentamente", outcome: "Las palabras fluyen, la energía se acumula estable." },
+                        { label: "Forzar la energía del ambiente", outcome: "Es arriesgado, pero el maná se arremolina violentamente a tu alrededor." }
+                    ]
+                },
+                {
+                    img: "imagenes/mago_2_conjuro.png",
+                    text: "Las runas brillan en el suelo. Un arquero enemigo te apunta desde la muralla.",
+                    choices: [
+                        { label: "Crear barrera de viento", outcome: "La flecha se desvía inofensivamente." },
+                        { label: "Disparar un rayo rápido", outcome: "Fulminas al arquero antes de que dispare. Vuelves al ritual." }
+                    ]
+                },
+                {
+                    img: "imagenes/mago_3_explosion.png",
+                    text: "¡El hechizo está listo! Sientes el poder arcano quemándote las manos. ¡AHORA!",
+                    choices: [
+                        { label: "¡Liberar la Nova Azul!", outcome: "Un haz de luz pura impacta la torre. La explosión sacude la tierra." },
+                        { label: "Dirigir el impacto a la puerta", outcome: "La puerta se vaporiza. Tus aliados vitorean." }
+                    ]
+                },
+                {
+                    img: "imagenes/mago_4_caos.png",
+                    text: "El esfuerzo te ha dejado agotado. Soldados enemigos salen de las ruinas hacia ti.",
+                    character: "imagenes/npc_enemigo.png",
+                    choices: [
+                        { label: "Usar el último aliento para quemarlos", outcome: "Una llamarada final los consume." },
+                        { label: "Teletransportarse a corta distancia", outcome: "Apareces detrás de una roca, a salvo." }
+                    ]
+                },
+                {
+                    img: "imagenes/mago_5_vacio.png",
+                    text: "La batalla termina. Desde la colina ves el humo y la victoria. Tu trabajo está hecho.",
+                    choices: [
+                        { label: "Meditar para recuperar fuerzas", outcome: "La magia vuelve a fluir lentamente." },
+                        { label: "Observar el castillo conquistado", outcome: "Sonríes. Sin ti, no lo habrían logrado." }
+                    ]
+                }
+            ],
+            saint: [
+                {
+                    img: "imagenes/santo_1_hospital.png",
+                    text: "La tienda médica es un caos. Los heridos del frente no paran de llegar.",
+                    choices: [
+                        { label: "Organizar a las enfermeras", outcome: "El orden salva vidas. La eficiencia mejora." },
+                        { label: "Atender al más grave tú mismo", outcome: "Tus manos detienen la hemorragia. Salvado." }
+                    ]
+                },
+                {
+                    img: "imagenes/santo_2_heridos.png",
+                    text: "Un soldado joven te agarra el brazo. 'No siento las piernas', grita.",
+                    choices: [
+                        { label: "Rezar una plegaria de calma", outcome: "Una luz dorada lo envuelve. El dolor cesa." },
+                        { label: "Aplicar vendajes y hierbas", outcome: "Método tradicional pero efectivo. Se estabiliza." }
+                    ]
+                },
+                {
+                    img: "imagenes/santo_3_rezo.png",
+                    text: "La tierra tiembla violentamente por una explosión mágica cercana. El techo de la tienda cede.",
+                    choices: [
+                        { label: "Sostener el pilar central", outcome: "Usas tu fuerza para evitar que la tienda colapse sobre los heridos." },
+                        { label: "Proteger a los pacientes con tu cuerpo", outcome: "Te caen escombros, pero ellos están a salvo." }
+                    ]
+                },
+                {
+                    img: "imagenes/santo_4_milagro.png",
+                    text: "La moral está baja. Creen que vamos a perder. Necesitan un milagro.",
+                    choices: [
+                        { label: "Invocar la Luz Sagrada", outcome: "Un pilar de luz sale de la tienda. Todos lo ven y recuperan la esperanza." },
+                        { label: "Dar un discurso de fe", outcome: "Tus palabras calan hondo. Los que pueden caminar, vuelven a luchar." }
+                    ]
+                },
+                {
+                    img: "imagenes/santo_5_paz.png",
+                    text: "El silencio cae. La batalla ha terminado. Sales de la tienda al amanecer.",
+                    choices: [
+                        { label: "Llorar por los caídos", outcome: "Tus lágrimas santifican el suelo." },
+                        { label: "Bendecir a los supervivientes", outcome: "Les das la paz que necesitan tras el horror." }
+                    ]
+                }
+            ]
+        };
+
+        // --- STATE ---
+        let currentGender = 'male'; // 'male' | 'female'
+        let currentClass = null;
+        let cIndex = 0; // current scene index
+        let currentStory = [];
+
+        // --- ELEMENTS ---
+        const menuScreen = document.getElementById('menu-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const bgVideo = document.getElementById('bg-video');
+        const bgVideoSource = bgVideo.querySelector('source');
+        const bgImage = document.getElementById('story-background');
+        const charOverlay = document.getElementById('character-overlay');
+        const narrativeText = document.getElementById('narrative-text');
+        const choicesArea = document.getElementById('choices-area');
+        const continueBtn = document.getElementById('continue-btn');
+        const genderBtns = document.querySelectorAll('.gender-btn');
+
+        // --- FUNCTIONS ---
+
+        function setGender(g) {
+            currentGender = g;
+            genderBtns.forEach(btn => {
+                if (btn.dataset.gender === g) btn.classList.add('selected');
+                else btn.classList.remove('selected');
+            });
+            // Update preview if something is hovered? (simpler to just wait for interaction)
+        }
+
+        // Background Video/Image Logic
+        function previewClass(className) {
+            // In a real scenario, we'd swap video sources like: 'assets/warrior_male.mp4'
+            // For now, we simulate logic but maybe just change color or image to avoid broken video icon loops
+            const genderSuffix = currentGender === 'male' ? '' : 'a'; // e.g. guerrero vs guerrera
+            // Simple mapping for prompt requirement:
+            // "guerrero.mp4" / "guerrera.mp4"
+
+            let videoFile = "";
+            let imageFallback = "";
+
+            if (className === 'warrior') {
+                videoFile = currentGender === 'male' ? 'guerrero.mp4' : 'guerrera.mp4';
+                imageFallback = 'imagenes/guerrero_bg_placeholder.jpg';
+            } else if (className === 'assassin') {
+                videoFile = currentGender === 'male' ? 'asesino.mp4' : 'asesina.mp4';
+            } else if (className === 'mage') {
+                videoFile = currentGender === 'male' ? 'mago.mp4' : 'maga.mp4';
+            } else if (className === 'saint') {
+                videoFile = currentGender === 'male' ? 'santo.mp4' : 'santa.mp4';
+            }
+
+            bgVideoSource.src = videoFile;
+            // Attempt to load. If fail, show fallback image (handled by onerror in real prod, here just setting path)
+            bgVideo.load();
+
+            // Note: Since files likely don't exist in user dir, browser will show black or nothing. 
+            // We'll keep it executing to satisfy prompt requirements.
+        }
+
+        function startGame(className) {
+            currentClass = className;
+            currentStory = stories[className];
+            cIndex = 0;
+
+            // Transition
+            menuScreen.classList.remove('active');
+
+            // Hide Video
+            bgVideo.style.opacity = 0;
+            setTimeout(() => bgVideo.pause(), 500);
+
+            setTimeout(() => {
+                gameScreen.classList.add('active');
+                loadScene(cIndex);
+            }, 500);
+        }
+
+        function getGenderedPath(path) {
+            if (currentGender === 'male' || !path) return path;
+            return path
+                .replace('guerrero', 'guerrera')
+                .replace('asesino', 'asesina')
+                .replace('mago', 'maga')
+                .replace('santo', 'santa');
+        }
+
+        function loadScene(index) {
+            // End of story?
+            if (index >= currentStory.length) {
+                // Should not happen if logic is correct, but safety net
+                returnToMenu();
+                return;
+            }
+
+            const sceneData = currentStory[index];
+
+            // 1. Text
+            narrativeText.innerHTML = sceneData.text;
+            narrativeText.classList.remove('fade-in');
+            void narrativeText.offsetWidth; // trigger reflow
+            narrativeText.classList.add('fade-in');
+
+            // 2. Background Image
+            // We use the scene image as the main background now, pausing video or overlaying it
+            bgImage.src = getGenderedPath(sceneData.img);
+            // Ensure Image is visible over video or replaces it
+            bgImage.style.opacity = "1";
+
+            // 3. Character Overlay?
+            if (sceneData.character) {
+                charOverlay.src = getGenderedPath(sceneData.character);
+                charOverlay.classList.remove('hidden');
+            } else {
+                charOverlay.classList.add('hidden');
+            }
+
+            // 4. Choices
+            choicesArea.innerHTML = '';
+            continueBtn.style.display = 'none';
+
+            sceneData.choices.forEach((choice, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn fade-in';
+                btn.style.animationDelay = `${i * 0.1}s`;
+                btn.textContent = choice.label;
+                btn.onclick = () => selectChoice(index, i);
+                choicesArea.appendChild(btn);
+            });
+        }
+
+        function selectChoice(sceneIdx, choiceIdx) {
+            const outcomeText = currentStory[sceneIdx].choices[choiceIdx].outcome;
+
+            // Update text with outcome
+            narrativeText.innerHTML = outcomeText;
+            narrativeText.classList.remove('fade-in');
+            void narrativeText.offsetWidth;
+            narrativeText.classList.add('fade-in');
+
+            // Hide choices, show continue
+            choicesArea.innerHTML = ''; // Remove buttons
+
+            // Special case: If it was the last scene (Scene 5 is index 4), continue button should say "Volver al Menú"
+            if (sceneIdx === currentStory.length - 1) {
+                continueBtn.textContent = "Volver al Menú ↺";
+                continueBtn.onclick = returnToMenu;
+            } else {
+                continueBtn.textContent = "Continuar ➝";
+                continueBtn.onclick = nextScene;
+            }
+
+            continueBtn.style.display = 'block';
+            continueBtn.classList.add('fade-in');
+        }
+
+        function nextScene() {
+            cIndex++;
+            if (cIndex < currentStory.length) {
+                loadScene(cIndex);
+            } else {
+                returnToMenu();
+            }
+        }
+
+        function returnToMenu() {
+            gameScreen.classList.remove('active');
+            // reset background
+            bgImage.src = '';
+
+            // Restore Video
+            bgVideo.play();
+            bgVideo.style.opacity = 0.5;
+
+            setTimeout(() => {
+                menuScreen.classList.add('active');
+                // clear old game state visuals if needed
+                charOverlay.classList.add('hidden');
+            }, 500);
+        }
+
+        function toggleUI() {
+            const container = document.getElementById('ui-container');
+            container.classList.toggle('ui-hidden');
+            const btn = document.getElementById('hide-ui-btn');
+            if (container.classList.contains('ui-hidden')) {
+                btn.style.opacity = "0.5";
+            } else {
+                btn.style.opacity = "1";
+            }
+        }
+
+        // Init
+        // Set initial video generic or black
+    </script>
+</body>
+
+</html>
